@@ -1,0 +1,3 @@
+# Install with: crontab deploy/digest.cron  (or merge into your existing crontab)
+CRON_TZ=Asia/Ho_Chi_Minh
+0 8 * * * . /etc/ai-eng-digest/digest.env && /usr/local/bin/digest --config /etc/ai-eng-digest/config.yaml >> /var/log/ai-eng-digest.log 2>&1

@@ -14,7 +14,7 @@ ai:
   gemini_model: gemini-2.5-flash
 sources:
   - {name: Anthropic News, type: html_listing, url: "https://www.anthropic.com/news", link_prefix: /news/}
-  - {name: Anthropic Engineering, type: html_listing, url: "https://www.anthropic.com/engineering", link_prefix: /engineering/}
+  - {name: Anthropic Engineering, type: html_listing, url: "https://www.anthropic.com/engineering", link_prefix: /research/}  # engineering posts live under /research/
   - name: Hacker News
     type: hackernews
     min_points: 30
