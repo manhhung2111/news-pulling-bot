@@ -1,0 +1,6 @@
+.superpowers/
+*.db
+*.db-*
+/digest
+.env
+digest.env
