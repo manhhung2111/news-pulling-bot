@@ -38,6 +38,12 @@ func Build(cfgs []config.SourceConfig, d Deps) ([]Source, error) {
 		switch c.Type {
 		case "rss":
 			out = append(out, NewRSS(c, d))
+		case "hackernews":
+			out = append(out, NewHackerNews(c, d, "https://hn.algolia.com"))
+		case "reddit_rss":
+			out = append(out, NewReddit(c, d, "https://www.reddit.com"))
+		case "html_listing":
+			out = append(out, NewHTMLListing(c, d))
 		default:
 			return nil, fmt.Errorf("source %q: unsupported type %q", c.Name, c.Type)
 		}
