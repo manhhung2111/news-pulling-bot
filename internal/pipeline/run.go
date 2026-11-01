@@ -131,7 +131,7 @@ func pick(ctx context.Context, d Deps, cands []model.Candidate, taste string) ([
 		byID[c.ID], valid[c.ID] = c, true
 	}
 	var ids []string
-	provider, err := completeParsed(ctx, d.AI, ai.BuildSelectPrompt(cands, taste, d.Cfg.ShortlistSize), func(raw string) error {
+	provider, err := d.AI.CompleteParsed(ctx, ai.BuildSelectPrompt(cands, taste, d.Cfg.ShortlistSize), func(raw string) error {
 		var perr error
 		ids, perr = ai.ParseShortlist(raw, valid)
 		return perr
@@ -163,7 +163,7 @@ func pick(ctx context.Context, d Deps, cands []model.Candidate, taste string) ([
 		shortlist = append(shortlist, c)
 	}
 	var items []model.Item
-	provider, err = completeParsed(ctx, d.AI, ai.BuildWritePrompt(shortlist, taste, d.Cfg.MaxItems), func(raw string) error {
+	provider, err = d.AI.CompleteParsed(ctx, ai.BuildWritePrompt(shortlist, taste, d.Cfg.MaxItems), func(raw string) error {
 		var perr error
 		items, perr = ai.ParseItems(raw)
 		return perr
@@ -172,21 +172,6 @@ func pick(ctx context.Context, d Deps, cands []model.Candidate, taste string) ([
 		return nil, "", fmt.Errorf("write: %w", err)
 	}
 	return ai.ValidateItems(items, byID, d.Cfg.MaxItems), provider, nil
-}
-
-// completeParsed calls the chain and parses the reply, retrying once when the reply doesn't parse.
-func completeParsed(ctx context.Context, chain ai.Chain, prompt string, parse func(string) error) (string, error) {
-	var lastErr error
-	for attempt := 0; attempt < 2; attempt++ {
-		text, provider, err := chain.Complete(ctx, prompt)
-		if err != nil {
-			return "", err
-		}
-		if lastErr = parse(text); lastErr == nil {
-			return provider, nil
-		}
-	}
-	return "", lastErr
 }
 
 func record(d Deps, digest model.Digest, offered []model.Candidate, posted discord.Posted, now time.Time) error {

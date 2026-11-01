@@ -29,3 +29,29 @@ func (c Chain) Complete(ctx context.Context, prompt string) (text, provider stri
 	}
 	return "", "", errors.Join(errs...)
 }
+
+// CompleteParsed tries each provider in order. A reply that fails parse is retried once with the same
+// provider, then counts as that provider's failure and the next provider is tried.
+func (c Chain) CompleteParsed(ctx context.Context, prompt string, parse func(string) error) (provider string, err error) {
+	var errs []error
+	for _, p := range c.Providers {
+		for attempt := 0; attempt < 2; attempt++ {
+			text, err := p.Complete(ctx, prompt)
+			if err != nil {
+				errs = append(errs, fmt.Errorf("%s: %w", p.Name(), err))
+				break
+			}
+			perr := parse(text)
+			if perr == nil {
+				return p.Name(), nil
+			}
+			if attempt == 1 {
+				errs = append(errs, fmt.Errorf("%s: %w", p.Name(), perr))
+			}
+		}
+	}
+	if len(errs) == 0 {
+		return "", errors.New("no AI providers configured")
+	}
+	return "", errors.Join(errs...)
+}

@@ -46,3 +46,27 @@ func TestChainAllFail(t *testing.T) {
 		t.Fatalf("err = %v", err)
 	}
 }
+
+func TestCompleteParsedFallsBackOnBadJSON(t *testing.T) {
+	a := &fakeProvider{name: "claude", out: "not json"}
+	b := &fakeProvider{name: "gemini", out: `{"ok":true}`}
+	var got string
+	prov, err := Chain{Providers: []Provider{a, b}}.CompleteParsed(context.Background(), "p", func(raw string) error {
+		if !strings.HasPrefix(raw, "{") {
+			return errors.New("bad json")
+		}
+		got = raw
+		return nil
+	})
+	if err != nil || prov != "gemini" || got != `{"ok":true}` || a.calls != 2 {
+		t.Fatalf("prov=%q got=%q err=%v claude calls=%d", prov, got, err, a.calls)
+	}
+}
+
+func TestCompleteParsedAllBad(t *testing.T) {
+	a := &fakeProvider{name: "claude", out: "x"}
+	_, err := Chain{Providers: []Provider{a}}.CompleteParsed(context.Background(), "p", func(string) error { return errors.New("bad json") })
+	if err == nil || !strings.Contains(err.Error(), "bad json") {
+		t.Fatalf("err = %v", err)
+	}
+}
