@@ -267,3 +267,15 @@ func TestRunThreadFailureStillRecordsSentAndSeen(t *testing.T) {
 		t.Fatalf("sent = %v", h.api.sent)
 	}
 }
+
+func TestRunDropsItemsNotShortlisted(t *testing.T) {
+	h := newHarness(t)
+	// Shortlist only c1, but the writer returns c2 (never read in full).
+	h.ai.writeOut = strings.ReplaceAll(strings.ReplaceAll(writeJSON, `"c1"`, `"c2"`), "https://a.com/hub", "https://b.com/hype")
+	if _, err := Run(context.Background(), h.deps, false); err != nil {
+		t.Fatal(err)
+	}
+	if len(h.api.embeds) != 0 || !strings.Contains(h.api.sent[0], "Nothing met the bar today.") {
+		t.Fatalf("non-shortlisted item was posted: %v", h.api.sent)
+	}
+}

@@ -160,6 +160,7 @@ func pick(ctx context.Context, d Deps, cands []model.Candidate, taste string) ([
 		return nil, provider, nil
 	}
 	shortlist := make([]model.Candidate, 0, len(ids))
+	shortByID := map[string]model.Candidate{}
 	for _, id := range ids {
 		c := byID[id]
 		if d.Article != nil {
@@ -176,7 +177,7 @@ func pick(ctx context.Context, d Deps, cands []model.Candidate, taste string) ([
 				d.Log.Info("reddit TL;DR fetch failed", "url", c.RedditPermalink, "err", err)
 			}
 		}
-		byID[id] = c
+		shortByID[id] = c
 		shortlist = append(shortlist, c)
 	}
 	var items []model.Item
@@ -188,7 +189,12 @@ func pick(ctx context.Context, d Deps, cands []model.Candidate, taste string) ([
 	if err != nil {
 		return nil, "", fmt.Errorf("write: %w", err)
 	}
-	return ai.ValidateItems(items, byID, d.Cfg.MaxItems), provider, nil
+	// Only shortlisted candidates were read in full, so only they may be written up.
+	valid2 := ai.ValidateItems(items, shortByID, d.Cfg.MaxItems)
+	if dropped := len(items) - len(valid2); dropped > 0 {
+		d.Log.Warn("dropped AI items that failed validation", "returned", len(items), "kept", len(valid2))
+	}
+	return valid2, provider, nil
 }
 
 func record(d Deps, digest model.Digest, offered []model.Candidate, posted discord.Posted, now time.Time) error {
