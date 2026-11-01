@@ -3,6 +3,7 @@ package sources
 import (
 	"context"
 	"fmt"
+	"html"
 	"net/url"
 	"regexp"
 	"strings"
@@ -55,8 +56,8 @@ func (r *Reddit) Fetch(ctx context.Context, since time.Time) ([]model.Candidate,
 			Published:       pub,
 			RedditPermalink: permalink,
 		}
-		if m := redditLinkRe.FindStringSubmatch(it.Content); m != nil && !isRedditURL(m[1]) {
-			c.URL = m[1]
+		if m := redditLinkRe.FindStringSubmatch(it.Content); m != nil && !isRedditURL(html.UnescapeString(m[1])) {
+			c.URL = html.UnescapeString(m[1])
 			c.Discussion = []string{permalink}
 		}
 		body, _, _ := strings.Cut(it.Content, "submitted by")

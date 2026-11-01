@@ -15,7 +15,7 @@ import (
 
 func redditListing(now time.Time) string {
 	ts := now.Add(-3 * time.Hour).Format(time.RFC3339)
-	linkContent := html.EscapeString(`<table><tr><td> submitted by <a href="https://www.reddit.com/user/alice"> /u/alice </a> <br/> <span><a href="https://blog.example.com/context-hub">[link]</a></span> <span><a href="https://www.reddit.com/r/ClaudeAI/comments/aaa/context_hub/">[comments]</a></span></td></tr></table>`)
+	linkContent := html.EscapeString(`<table><tr><td> submitted by <a href="https://www.reddit.com/user/alice"> /u/alice </a> <br/> <span><a href="https://blog.example.com/context-hub?a=1&amp;b=2">[link]</a></span> <span><a href="https://www.reddit.com/r/ClaudeAI/comments/aaa/context_hub/">[comments]</a></span></td></tr></table>`)
 	selfContent := html.EscapeString(`<div class="md"><p>I packed my PR review workflow into a skill.</p></div> submitted by <a href="https://www.reddit.com/user/bob"> /u/bob </a> <span><a href="https://www.reddit.com/r/ClaudeAI/comments/bbb/pr_skill/">[link]</a></span> <span><a href="https://www.reddit.com/r/ClaudeAI/comments/bbb/pr_skill/">[comments]</a></span>`)
 	return fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
@@ -74,7 +74,7 @@ func TestRedditLinkPostUsesExternalURL(t *testing.T) {
 		t.Fatalf("got %d", len(got))
 	}
 	c := got[0]
-	if c.URL != "https://blog.example.com/context-hub" || len(c.Discussion) != 1 ||
+	if c.URL != "https://blog.example.com/context-hub?a=1&b=2" || c.NormURL != "https://blog.example.com/context-hub?a=1&b=2" || len(c.Discussion) != 1 ||
 		c.Discussion[0] != "https://www.reddit.com/r/ClaudeAI/comments/aaa/context_hub/" ||
 		c.RedditPermalink != "https://www.reddit.com/r/ClaudeAI/comments/aaa/context_hub/" || c.Source != "r/ClaudeAI" {
 		t.Errorf("link post = %+v", c)
