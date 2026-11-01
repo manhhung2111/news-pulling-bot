@@ -56,9 +56,10 @@ func (s *scriptedAI) Complete(_ context.Context, p string) (string, error) {
 }
 
 type recAPI struct {
-	sent   []string
-	embeds []string
-	n      int
+	threadErr error
+	sent      []string
+	embeds    []string
+	n         int
 }
 
 func (r *recAPI) next() string { r.n++; return fmt.Sprintf("m%d", r.n) }
@@ -66,12 +67,12 @@ func (r *recAPI) Send(ch, content string) (string, error) {
 	r.sent = append(r.sent, content)
 	return r.next(), nil
 }
-func (r *recAPI) StartThread(ch, msg, name string) (string, error) { return "th", nil }
+func (r *recAPI) StartThread(ch, msg, name string) (string, error) { return "th", r.threadErr }
 func (r *recAPI) SendEmbed(ch string, e *discordgo.MessageEmbed) (string, error) {
 	r.embeds = append(r.embeds, e.Title)
 	return r.next(), nil
 }
-func (r *recAPI) React(string, string, string) error                  { return nil }
+func (r *recAPI) React(string, string, string) error                 { return nil }
 func (r *recAPI) Reactions(string, string, string) ([]string, error) { return nil, nil }
 func (r *recAPI) Messages(string, int) ([]discord.Message, error)    { return nil, nil }
 
@@ -230,7 +231,7 @@ func TestRunRetriesWriteOnBadJSON(t *testing.T) {
 
 type providerFunc func(string) (string, error)
 
-func (f providerFunc) Name() string { return "claude" }
+func (f providerFunc) Name() string                                         { return "claude" }
 func (f providerFunc) Complete(_ context.Context, p string) (string, error) { return f(p) }
 
 func TestRunSecondDayDoesNotReofferSeen(t *testing.T) {
@@ -247,5 +248,22 @@ func TestRunSecondDayDoesNotReofferSeen(t *testing.T) {
 	}
 	if !strings.Contains(h.api.sent[1], "Nothing met the bar today.") {
 		t.Fatalf("second headline = %s", h.api.sent[1])
+	}
+}
+
+func TestRunThreadFailureStillRecordsSentAndSeen(t *testing.T) {
+	h := newHarness(t)
+	h.api.threadErr = errors.New("missing Create Public Threads permission")
+	if _, err := Run(context.Background(), h.deps, false); err == nil {
+		t.Fatal("expected error")
+	}
+	if sent, _ := h.st.IsSent("https://a.com/hub"); !sent {
+		t.Error("item shown in headline was not recorded as sent")
+	}
+	if seen, _ := h.st.IsSeen("https://b.com/hype"); !seen {
+		t.Error("offered candidates not marked seen after headline was posted")
+	}
+	if len(h.api.sent) != 2 || !strings.Contains(h.api.sent[1], "start thread") {
+		t.Fatalf("sent = %v", h.api.sent)
 	}
 }

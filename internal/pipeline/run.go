@@ -48,7 +48,8 @@ type Summary struct {
 // Run builds and posts (or, in dry-run, prints) one digest.
 func Run(ctx context.Context, d Deps, dryRun bool) (Summary, error) {
 	sum, err := run(ctx, d, dryRun)
-	if err != nil && !dryRun && d.Discord != nil {
+	var quiet quietError
+	if err != nil && !dryRun && d.Discord != nil && !errors.As(err, &quiet) {
 		if perr := discord.PostFailure(d.Discord, d.Cfg.Discord.ChannelID, err.Error()); perr != nil {
 			d.Log.Error("post failure message failed", "err", perr)
 		}
@@ -116,12 +117,28 @@ func run(ctx context.Context, d Deps, dryRun bool) (Summary, error) {
 	if d.Discord == nil {
 		return sum, errors.New("no Discord client configured")
 	}
-	posted, err := discord.PostDigest(d.Discord, d.Cfg.Discord.ChannelID, rendered)
-	if err != nil {
-		return sum, fmt.Errorf("post digest: %w", err)
+	posted, postErr := discord.PostDigest(d.Discord, d.Cfg.Discord.ChannelID, rendered)
+	if posted.MessageID == "" {
+		return sum, fmt.Errorf("post digest: %w", postErr)
 	}
-	return sum, record(d, digest, cands, posted, now)
+	// The headline is visible, so its links count as sent even if a later step failed.
+	recErr := record(d, digest, cands, posted, now)
+	if postErr != nil {
+		if recErr != nil {
+			d.Log.Error("record after partial post failed", "err", recErr)
+		}
+		return sum, fmt.Errorf("post digest: %w", postErr)
+	}
+	if recErr != nil {
+		return sum, quietError{recErr} // the digest is posted; don't announce a failure under it
+	}
+	return sum, nil
 }
+
+// quietError is a run error that should be logged but not announced in the channel.
+type quietError struct{ error }
+
+func (q quietError) Unwrap() error { return q.error }
 
 // pick runs shortlist → enrich → write → validate and returns the items and the provider that wrote them.
 func pick(ctx context.Context, d Deps, cands []model.Candidate, taste string) ([]model.Item, string, error) {
@@ -184,10 +201,11 @@ func record(d Deps, digest model.Digest, offered []model.Candidate, posted disco
 	}
 	var items []store.ItemRecord
 	for i, it := range digest.Items {
-		if i >= len(posted.ItemMessageIDs) {
-			break
+		msgID := fmt.Sprintf("unposted:%s:%d", date, i+1) // listed in the headline, but its thread message never went out
+		if i < len(posted.ItemMessageIDs) {
+			msgID = posted.ItemMessageIDs[i]
 		}
-		items = append(items, store.ItemRecord{MessageID: posted.ItemMessageIDs[i], DigestDate: date,
+		items = append(items, store.ItemRecord{MessageID: msgID, DigestDate: date,
 			NormURL: normOf[it.CandidateID], Title: it.Title, Source: it.Source})
 	}
 	rec := store.DigestRecord{Date: date, ChannelID: d.Cfg.Discord.ChannelID, MessageID: posted.MessageID,
