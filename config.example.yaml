@@ -1,0 +1,28 @@
+timezone: Asia/Ho_Chi_Minh
+lookback_hours: 48
+max_items: 5
+shortlist_size: 8
+feedback_days: 14
+db_path: ./digest.db
+user_agent: "ai-eng-digest/0.1 (personal digest bot)"
+discord:
+  channel_id: "REPLACE_ME"
+  owner_user_id: "REPLACE_ME"
+ai:
+  claude_bin: claude
+  claude_timeout: 10m
+  gemini_model: gemini-2.5-flash
+sources:
+  - {name: Anthropic News, type: html_listing, url: "https://www.anthropic.com/news", link_prefix: /news/}
+  - {name: Anthropic Engineering, type: html_listing, url: "https://www.anthropic.com/engineering", link_prefix: /engineering/}
+  - name: Hacker News
+    type: hackernews
+    min_points: 30
+    keywords: [Claude, Anthropic, agent, agents, agentic, LLM, LLMs, AI, MCP, Cursor, Copilot, Codex, prompt, context, skill, skills, RAG]
+  # tldr_author: confirm the r/ClaudeAI summary bot's username on a live thread
+  - {name: r/ClaudeAI, type: reddit_rss, subreddit: ClaudeAI, listing: top, period: day, tldr_author: "", tldr_marker: "TL;DR"}
+  - {name: Simon Willison, type: rss, url: "https://simonwillison.net/atom/entries/"}
+  - {name: Martin Fowler, type: rss, url: "https://martinfowler.com/feed.atom"}
+  - {name: The Pragmatic Engineer, type: rss, url: "https://newsletter.pragmaticengineer.com/feed", paywalled: true}
+  - {name: GitHub Blog (Engineering), type: rss, url: "https://github.blog/engineering/feed/"}
+  - {name: GitHub Blog (AI & ML), type: rss, url: "https://github.blog/ai-and-ml/feed/"}
