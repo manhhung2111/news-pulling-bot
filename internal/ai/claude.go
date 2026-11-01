@@ -28,7 +28,14 @@ func (c *claudeCLI) Name() string { return "claude" }
 func (c *claudeCLI) Complete(ctx context.Context, prompt string) (string, error) {
 	ctx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, c.bin, "-p", "--output-format", "json")
+	// The prompt carries scraped web text, so run with no tools in an empty directory.
+	dir, err := os.MkdirTemp("", "digest-claude-")
+	if err != nil {
+		return "", err
+	}
+	defer os.RemoveAll(dir)
+	cmd := exec.CommandContext(ctx, c.bin, "-p", "--output-format", "json", "--tools", "")
+	cmd.Dir = dir
 	cmd.Stdin = strings.NewReader(prompt)
 	cmd.Env = os.Environ()
 	if c.token != "" {

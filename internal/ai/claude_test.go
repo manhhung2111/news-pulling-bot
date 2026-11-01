@@ -30,7 +30,8 @@ func TestClaudeReturnsResult(t *testing.T) {
 func TestClaudePassesPromptOnStdinAndFlags(t *testing.T) {
 	out := filepath.Join(t.TempDir(), "stdin")
 	args := filepath.Join(t.TempDir(), "args")
-	bin := fakeClaude(t, `cat > `+out+`; echo "$@" > `+args+`; echo '{"is_error":false,"result":"ok"}'`)
+	dir := filepath.Join(t.TempDir(), "pwd")
+	bin := fakeClaude(t, `cat > `+out+`; printf '%s|' "$@" > `+args+`; pwd > `+dir+`; echo '{"is_error":false,"result":"ok"}'`)
 	if _, err := NewClaude(bin, time.Minute, "").Complete(context.Background(), "the prompt"); err != nil {
 		t.Fatal(err)
 	}
@@ -39,8 +40,13 @@ func TestClaudePassesPromptOnStdinAndFlags(t *testing.T) {
 		t.Errorf("stdin = %q", b)
 	}
 	a, _ := os.ReadFile(args)
-	if strings.TrimSpace(string(a)) != "-p --output-format json" {
-		t.Errorf("args = %q", a)
+	if string(a) != "-p|--output-format|json|--tools||" {
+		t.Errorf("args = %q (want all tools disabled)", a)
+	}
+	wd, _ := os.Getwd()
+	pwd, _ := os.ReadFile(dir)
+	if strings.TrimSpace(string(pwd)) == wd {
+		t.Error("claude should run in an empty scratch directory, not the caller's working dir")
 	}
 }
 

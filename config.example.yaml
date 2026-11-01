@@ -19,8 +19,8 @@ sources:
     type: hackernews
     min_points: 30
     keywords: [Claude, Anthropic, agent, agents, agentic, LLM, LLMs, AI, MCP, Cursor, Copilot, Codex, prompt, context, skill, skills, RAG]
-  # tldr_author: confirm the r/ClaudeAI summary bot's username on a live thread
-  - {name: r/ClaudeAI, type: reddit_rss, subreddit: ClaudeAI, listing: top, period: day, tldr_author: "", tldr_marker: "TL;DR"}
+  # Community TL;DR is off until you set tldr_author to the r/ClaudeAI summary bot's username (see README step 8).
+  - {name: r/ClaudeAI, type: reddit_rss, subreddit: ClaudeAI, listing: top, period: day, tldr_author: "", tldr_marker: ""}
   - {name: Simon Willison, type: rss, url: "https://simonwillison.net/atom/entries/"}
   - {name: Martin Fowler, type: rss, url: "https://martinfowler.com/feed.atom"}
   - {name: The Pragmatic Engineer, type: rss, url: "https://newsletter.pragmaticengineer.com/feed", paywalled: true}
