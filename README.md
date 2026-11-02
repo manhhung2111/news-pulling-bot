@@ -6,11 +6,13 @@ Design: `docs/superpowers/specs/2026-11-01-ai-eng-digest-design.md`
 
 ## Setup on EC2
 
-1. **Build** on your machine and copy the binary:
+1. **Build** on your machine and copy the binary plus the config templates (run from the repo root):
    ```sh
    GOOS=linux GOARCH=amd64 go build -o digest ./cmd/digest   # GOARCH=arm64 for Graviton
-   scp digest ec2-user@<host>:/tmp/ && ssh ec2-user@<host> sudo mv /tmp/digest /usr/local/bin/
+   scp digest config.example.yaml deploy/digest.env.example deploy/digest.cron ec2-user@<host>:/tmp/
+   ssh ec2-user@<host> sudo mv /tmp/digest /usr/local/bin/
    ```
+   Steps 5 and 9 run on the instance from `/tmp`, where these files landed.
 2. **Claude Code** on the instance: install the `claude` CLI, then run `claude setup-token` and keep the token for step 5.
 3. **Discord bot**
    - In the [Developer Portal](https://discord.com/developers/applications): New Application → Bot → copy the token.
@@ -21,8 +23,8 @@ Design: `docs/superpowers/specs/2026-11-01-ai-eng-digest-design.md`
 5. **Config and secrets**
    ```sh
    sudo mkdir -p /etc/ai-eng-digest /var/lib/ai-eng-digest
-   sudo cp config.example.yaml /etc/ai-eng-digest/config.yaml      # set channel_id, owner_user_id, db_path: /var/lib/ai-eng-digest/digest.db
-   sudo cp deploy/digest.env.example /etc/ai-eng-digest/digest.env # fill in the tokens
+   sudo cp /tmp/config.example.yaml /etc/ai-eng-digest/config.yaml  # set channel_id, owner_user_id, db_path: /var/lib/ai-eng-digest/digest.db
+   sudo cp /tmp/digest.env.example /etc/ai-eng-digest/digest.env    # fill in the tokens
    sudo chmod 600 /etc/ai-eng-digest/digest.env
    ```
    Make sure the user that runs cron can write `/var/lib/ai-eng-digest` and `/var/log/ai-eng-digest.log`.
@@ -36,7 +38,7 @@ Design: `docs/superpowers/specs/2026-11-01-ai-eng-digest-design.md`
    ```
    `200` means it works. Anything else means r/ClaudeAI will show as unavailable each day, and the digest carries on without it.
 8. **Reddit TL;DR bot.** Open a busy r/ClaudeAI thread, find the bot's discussion-summary comment, and put its username in `tldr_author` (or a phrase it always starts with in `tldr_marker`).
-9. **Schedule:** `crontab deploy/digest.cron` (08:00 Asia/Ho_Chi_Minh daily).
+9. **Schedule:** `crontab /tmp/digest.cron` on the instance (08:00 Asia/Ho_Chi_Minh daily).
 
 ## Everyday use
 
