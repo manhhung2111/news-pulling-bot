@@ -142,3 +142,42 @@ func TestRedditTLDRNoneFound(t *testing.T) {
 		t.Fatalf("got %q, %v", got, err)
 	}
 }
+
+func TestRedditSelfPostCarriesBodyAsArticleText(t *testing.T) {
+	f := &redditFixture{}
+	srv := f.server(t)
+	got, _ := NewReddit(redditCfg, Deps{HTTP: srv.Client()}, srv.URL).Fetch(context.Background(), time.Now().Add(-48*time.Hour))
+	if !strings.Contains(got[1].ArticleText, "PR review workflow") {
+		t.Errorf("self post ArticleText = %q", got[1].ArticleText)
+	}
+	if got[0].ArticleText != "" {
+		t.Errorf("link post ArticleText = %q, want empty so the linked article is fetched", got[0].ArticleText)
+	}
+}
+
+func TestRedditTLDRUnconfiguredMakesNoRequest(t *testing.T) {
+	f := &redditFixture{comments: redditComments("bot", "<p>TL;DR</p>")}
+	srv := f.server(t)
+	got, err := NewReddit(redditCfg, Deps{HTTP: srv.Client()}, srv.URL).FetchTLDR(context.Background(), permalink)
+	if err != nil || got != "" || len(f.gotPaths) != 0 {
+		t.Fatalf("got %q, %v, requests %v", got, err, f.gotPaths)
+	}
+}
+
+func TestRedditTLDRSpacesRequests(t *testing.T) {
+	f := &redditFixture{comments: redditComments("bot", "<p>x</p>")}
+	srv := f.server(t)
+	cfg := redditCfg
+	cfg.TLDRAuthor = "bot"
+	r := NewReddit(cfg, Deps{HTTP: srv.Client()}, srv.URL)
+	r.gap = 200 * time.Millisecond
+	start := time.Now()
+	for i := 0; i < 2; i++ {
+		if _, err := r.FetchTLDR(context.Background(), permalink); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if el := time.Since(start); el < 200*time.Millisecond {
+		t.Errorf("two TL;DR fetches took %v, want ≥ 200ms apart", el)
+	}
+}

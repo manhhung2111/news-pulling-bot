@@ -279,3 +279,23 @@ func TestRunDropsItemsNotShortlisted(t *testing.T) {
 		t.Fatalf("non-shortlisted item was posted: %v", h.api.sent)
 	}
 }
+
+func TestRunSkipsArticleFetchWhenTextKnown(t *testing.T) {
+	self := c("r/ClaudeAI", "https://a.com/hub", "Context hub")
+	self.ArticleText = "POST BODY FROM FEED"
+	h := newHarness(t, stubSource{name: "r/ClaudeAI", out: []model.Candidate{self}})
+	var fetched []string
+	h.deps.Article = func(_ context.Context, u string) (string, error) {
+		fetched = append(fetched, u)
+		return "ARTICLE BODY", nil
+	}
+	if _, err := Run(context.Background(), h.deps, false); err != nil {
+		t.Fatal(err)
+	}
+	if len(fetched) != 0 {
+		t.Errorf("article fetched for %v, want none", fetched)
+	}
+	if !strings.Contains(h.ai.prompts[len(h.ai.prompts)-1], "POST BODY FROM FEED") {
+		t.Error("write prompt is missing the feed body")
+	}
+}

@@ -19,6 +19,8 @@ type Reddit struct {
 	cfg     config.SourceConfig
 	d       Deps
 	baseURL string
+	gap     time.Duration // minimum spacing between comment-feed requests; Reddit answers 429 to bursts
+	last    time.Time
 }
 
 var redditLinkRe = regexp.MustCompile(`<a href="([^"]+)">\[link\]</a>`)
@@ -31,7 +33,7 @@ func NewReddit(cfg config.SourceConfig, d Deps, baseURL string) *Reddit {
 	if cfg.Period == "" {
 		cfg.Period = "day"
 	}
-	return &Reddit{cfg: cfg, d: d, baseURL: strings.TrimRight(baseURL, "/")}
+	return &Reddit{cfg: cfg, d: d, baseURL: strings.TrimRight(baseURL, "/"), gap: 3 * time.Second}
 }
 
 func (r *Reddit) Name() string { return r.cfg.Name }
@@ -62,6 +64,10 @@ func (r *Reddit) Fetch(ctx context.Context, since time.Time) ([]model.Candidate,
 		}
 		body, _, _ := strings.Cut(it.Content, "submitted by")
 		c.Excerpt = plainText(body, 500)
+		if len(c.Discussion) == 0 {
+			// A text post's body is already in the feed; Reddit refuses the post page from servers (403).
+			c.ArticleText = plainText(body, 8000)
+		}
 		c.NormURL = urlnorm.Normalize(c.URL)
 		out = append(out, c)
 	}
@@ -79,6 +85,17 @@ func isRedditURL(s string) bool {
 
 // FetchTLDR returns the summary comment left by the subreddit's bot on the thread at permalink, or "" when there is none.
 func (r *Reddit) FetchTLDR(ctx context.Context, permalink string) (string, error) {
+	if r.cfg.TLDRAuthor == "" && r.cfg.TLDRMarker == "" {
+		return "", nil // TL;DR is off; don't spend Reddit's rate limit on it
+	}
+	if wait := time.Until(r.last.Add(r.gap)); wait > 0 {
+		select {
+		case <-time.After(wait):
+		case <-ctx.Done():
+			return "", ctx.Err()
+		}
+	}
+	defer func() { r.last = time.Now() }()
 	p, err := url.Parse(permalink)
 	if err != nil {
 		return "", err

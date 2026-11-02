@@ -163,7 +163,7 @@ func pick(ctx context.Context, d Deps, cands []model.Candidate, taste string) ([
 	shortByID := map[string]model.Candidate{}
 	for _, id := range ids {
 		c := byID[id]
-		if d.Article != nil {
+		if d.Article != nil && c.ArticleText == "" {
 			if text, err := d.Article(ctx, c.URL); err == nil {
 				c.ArticleText = text
 			} else {

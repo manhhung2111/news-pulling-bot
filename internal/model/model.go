@@ -17,7 +17,7 @@ type Candidate struct {
 	Paywalled       bool
 	RedditPermalink string // set for reddit candidates (TL;DR lookup)
 	CommunityTLDR   string // filled in by enrich
-	ArticleText     string // filled in by enrich, ≤ 8000 chars
+	ArticleText     string // filled in by enrich (or by the source when the feed has the full text), ≤ 8000 chars
 }
 
 type Citation struct {
