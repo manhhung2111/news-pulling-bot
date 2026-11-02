@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - run: go vet ./...
+      - run: go test ./...
+
+  # Ships only the binary. Config and secrets in /etc/ai-eng-digest stay as they are on the instance.
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment: production # limited to main, with a required reviewer; holds the AWS settings
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write # lets AWS trust this job via OIDC; no AWS keys are stored in GitHub
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      BUCKET: ${{ vars.DEPLOY_BUCKET }}
+      INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+      KEY: digest/${{ github.sha }}/digest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Build for the instance (linux/arm64)
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -ldflags="-s -w" -o digest ./cmd/digest
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Upload to S3
+        run: aws s3 cp digest "s3://$BUCKET/$KEY" --only-show-errors
+      - name: Install on EC2 via SSM
+        run: |
+          sum=$(sha256sum digest | cut -d' ' -f1)
+          # Runs as root on the instance. The rename is atomic, so a digest run in progress keeps the old binary.
+          script=$(cat <<EOF
+          set -eu
+          [ "\$(uname -m)" = aarch64 ] || { echo "instance is \$(uname -m) but the build is arm64"; exit 1; }
+          aws s3 cp "s3://$BUCKET/$KEY" /tmp/digest.new --region "$AWS_REGION" --only-show-errors
+          echo "$sum  /tmp/digest.new" | sha256sum -c -
+          install -m 755 /tmp/digest.new /usr/local/bin/digest.new
+          mv -f /usr/local/bin/digest.new /usr/local/bin/digest
+          rm -f /tmp/digest.new
+          echo "deployed $GITHUB_SHA"
+          EOF
+          )
+          params=$(jq -n --arg s "$script" '{commands: [$s]}')
+          id=$(aws ssm send-command --instance-ids "$INSTANCE_ID" --document-name AWS-RunShellScript \
+            --comment "deploy ${GITHUB_SHA::7}" --parameters "$params" --query Command.CommandId --output text)
+          sleep 3
+          aws ssm wait command-executed --command-id "$id" --instance-id "$INSTANCE_ID" || true
+          inv=$(aws ssm get-command-invocation --command-id "$id" --instance-id "$INSTANCE_ID")
+          jq -r .StandardOutputContent <<<"$inv"
+          jq -r .StandardErrorContent <<<"$inv" >&2
+          status=$(jq -r .Status <<<"$inv")
+          echo "SSM status: $status"
+          test "$status" = Success
