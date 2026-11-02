@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mhung2111/ai-eng-digest/internal/model"
-	"github.com/mhung2111/ai-eng-digest/internal/urlnorm"
+	"github.com/manhhung2111/news-pulling-bot/internal/model"
+	"github.com/manhhung2111/news-pulling-bot/internal/urlnorm"
 )
 
 // extractJSON strips a ``` fence or surrounding prose and returns the outermost JSON object.

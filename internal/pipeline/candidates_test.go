@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mhung2111/ai-eng-digest/internal/model"
-	"github.com/mhung2111/ai-eng-digest/internal/urlnorm"
+	"github.com/manhhung2111/news-pulling-bot/internal/model"
+	"github.com/manhhung2111/news-pulling-bot/internal/urlnorm"
 )
 
 func cand(src, url string, opts ...func(*model.Candidate)) model.Candidate {

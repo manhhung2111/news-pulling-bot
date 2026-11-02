@@ -10,13 +10,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/mhung2111/ai-eng-digest/internal/ai"
-	"github.com/mhung2111/ai-eng-digest/internal/config"
-	"github.com/mhung2111/ai-eng-digest/internal/discord"
-	"github.com/mhung2111/ai-eng-digest/internal/enrich"
-	"github.com/mhung2111/ai-eng-digest/internal/pipeline"
-	"github.com/mhung2111/ai-eng-digest/internal/sources"
-	"github.com/mhung2111/ai-eng-digest/internal/store"
+	"github.com/manhhung2111/news-pulling-bot/internal/ai"
+	"github.com/manhhung2111/news-pulling-bot/internal/config"
+	"github.com/manhhung2111/news-pulling-bot/internal/discord"
+	"github.com/manhhung2111/news-pulling-bot/internal/enrich"
+	"github.com/manhhung2111/news-pulling-bot/internal/pipeline"
+	"github.com/manhhung2111/news-pulling-bot/internal/sources"
+	"github.com/manhhung2111/news-pulling-bot/internal/store"
 )
 
 func main() {

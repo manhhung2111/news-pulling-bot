@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mhung2111/ai-eng-digest/internal/config"
-	"github.com/mhung2111/ai-eng-digest/internal/model"
-	"github.com/mhung2111/ai-eng-digest/internal/urlnorm"
+	"github.com/manhhung2111/news-pulling-bot/internal/config"
+	"github.com/manhhung2111/news-pulling-bot/internal/model"
+	"github.com/manhhung2111/news-pulling-bot/internal/urlnorm"
 )
 
 const hnItemURL = "https://news.ycombinator.com/item?id="

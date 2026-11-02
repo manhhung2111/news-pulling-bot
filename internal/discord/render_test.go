@@ -7,7 +7,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 
-	"github.com/mhung2111/ai-eng-digest/internal/model"
+	"github.com/manhhung2111/news-pulling-bot/internal/model"
 )
 
 var day = time.Date(2026, 11, 1, 8, 0, 0, 0, time.FixedZone("ICT", 7*3600))

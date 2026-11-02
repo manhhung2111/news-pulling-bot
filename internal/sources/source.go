@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mhung2111/ai-eng-digest/internal/config"
-	"github.com/mhung2111/ai-eng-digest/internal/model"
+	"github.com/manhhung2111/news-pulling-bot/internal/config"
+	"github.com/manhhung2111/news-pulling-bot/internal/model"
 )
 
 type Source interface {

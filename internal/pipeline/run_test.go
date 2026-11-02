@@ -14,13 +14,13 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 
-	"github.com/mhung2111/ai-eng-digest/internal/ai"
-	"github.com/mhung2111/ai-eng-digest/internal/config"
-	"github.com/mhung2111/ai-eng-digest/internal/discord"
-	"github.com/mhung2111/ai-eng-digest/internal/model"
-	"github.com/mhung2111/ai-eng-digest/internal/sources"
-	"github.com/mhung2111/ai-eng-digest/internal/store"
-	"github.com/mhung2111/ai-eng-digest/internal/urlnorm"
+	"github.com/manhhung2111/news-pulling-bot/internal/ai"
+	"github.com/manhhung2111/news-pulling-bot/internal/config"
+	"github.com/manhhung2111/news-pulling-bot/internal/discord"
+	"github.com/manhhung2111/news-pulling-bot/internal/model"
+	"github.com/manhhung2111/news-pulling-bot/internal/sources"
+	"github.com/manhhung2111/news-pulling-bot/internal/store"
+	"github.com/manhhung2111/news-pulling-bot/internal/urlnorm"
 )
 
 type stubSource struct {

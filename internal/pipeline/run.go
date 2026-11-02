@@ -8,13 +8,13 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/mhung2111/ai-eng-digest/internal/ai"
-	"github.com/mhung2111/ai-eng-digest/internal/config"
-	"github.com/mhung2111/ai-eng-digest/internal/discord"
-	"github.com/mhung2111/ai-eng-digest/internal/feedback"
-	"github.com/mhung2111/ai-eng-digest/internal/model"
-	"github.com/mhung2111/ai-eng-digest/internal/sources"
-	"github.com/mhung2111/ai-eng-digest/internal/store"
+	"github.com/manhhung2111/news-pulling-bot/internal/ai"
+	"github.com/manhhung2111/news-pulling-bot/internal/config"
+	"github.com/manhhung2111/news-pulling-bot/internal/discord"
+	"github.com/manhhung2111/news-pulling-bot/internal/feedback"
+	"github.com/manhhung2111/news-pulling-bot/internal/model"
+	"github.com/manhhung2111/news-pulling-bot/internal/sources"
+	"github.com/manhhung2111/news-pulling-bot/internal/store"
 )
 
 // maxOffered caps how many candidates go to the shortlist prompt (newest first).

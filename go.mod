@@ -1,4 +1,4 @@
-module github.com/mhung2111/ai-eng-digest
+module github.com/manhhung2111/news-pulling-bot
 
 go 1.26.1
 

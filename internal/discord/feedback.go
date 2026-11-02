@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/mhung2111/ai-eng-digest/internal/store"
+	"github.com/manhhung2111/news-pulling-bot/internal/store"
 )
 
 type FeedbackStore interface {

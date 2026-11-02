@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Module path: `github.com/mhung2111/ai-eng-digest`. Binary: `cmd/digest`.
+- Module path: `github.com/manhhung2111/news-pulling-bot`. Binary: `cmd/digest`.
 - Schedule: daily 08:00 `Asia/Ho_Chi_Minh` (01:00 UTC). Cron line: `CRON_TZ=Asia/Ho_Chi_Minh` + `0 8 * * *`.
 - Max items per digest: 5 (ceiling, not quota). 0 is valid.
 - Lookback window default: 48h. Feedback window default: 14 days.
@@ -109,7 +109,7 @@ deploy/digest.cron, deploy/digest.env.example, README.md
   func (c *Config) Location() *time.Location
   ```
 
-- [ ] **Step 1:** `git init`. Create `.gitignore` with `.superpowers/`, `*.db`, `*.db-*`, `/digest`, `.env`, `digest.env`. Run `go mod init github.com/mhung2111/ai-eng-digest`, then `go get gopkg.in/yaml.v3`.
+- [ ] **Step 1:** `git init`. Create `.gitignore` with `.superpowers/`, `*.db`, `*.db-*`, `/digest`, `.env`, `digest.env`. Run `go mod init github.com/manhhung2111/news-pulling-bot`, then `go get gopkg.in/yaml.v3`.
 - [ ] **Step 2: Write failing tests** in `config_test.go`:
   - `TestLoadAppliesDefaults`: minimal YAML (db_path, discord ids, one rss source) → `LookbackHours==48`, `MaxItems==5`, `ShortlistSize==8`, `FeedbackDays==14`, `Timezone=="Asia/Ho_Chi_Minh"`, `AI.GeminiModel=="gemini-2.5-flash"`, `AI.ClaudeTimeout==10*time.Minute`.
   - `TestLoadReadsSecretsFromEnv`: `t.Setenv` the three vars → `Secrets` populated.

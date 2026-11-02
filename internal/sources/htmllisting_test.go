@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mhung2111/ai-eng-digest/internal/config"
+	"github.com/manhhung2111/news-pulling-bot/internal/config"
 )
 
 type listingFixture struct {

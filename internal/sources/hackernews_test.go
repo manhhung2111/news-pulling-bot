@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mhung2111/ai-eng-digest/internal/config"
-	"github.com/mhung2111/ai-eng-digest/internal/model"
+	"github.com/manhhung2111/news-pulling-bot/internal/config"
+	"github.com/manhhung2111/news-pulling-bot/internal/model"
 )
 
 func hnServer(t *testing.T, check func(r *http.Request)) *httptest.Server {

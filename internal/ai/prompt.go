@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mhung2111/ai-eng-digest/internal/model"
+	"github.com/manhhung2111/news-pulling-bot/internal/model"
 )
 
 // QualityBar is the fixed bar every pick must clear. Owner feedback steers choices within it, never replaces it.
