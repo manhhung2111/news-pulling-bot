@@ -4,3 +4,4 @@
 /digest
 .env
 digest.env
+*.pem
