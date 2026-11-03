@@ -34,9 +34,9 @@ jobs:
     permissions:
       contents: read
     env:
-      AWS_REGION: ${{ vars.AWS_REGION }}
-      BUCKET: ${{ vars.DEPLOY_BUCKET }}
-      INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      BUCKET: ${{ secrets.DEPLOY_BUCKET }}
+      INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
       KEY: digest/${{ github.sha }}/digest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -52,7 +52,7 @@ jobs:
           # A dedicated IAM user that can only upload builds and send commands to this one instance.
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ vars.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION }}
       - name: Upload to S3
         run: aws s3 cp digest "s3://$BUCKET/$KEY" --only-show-errors
       - name: Install on EC2 via SSM

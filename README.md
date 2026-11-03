@@ -51,8 +51,7 @@ One-time setup, in this order. Fill the placeholders (`ACCOUNT_ID`, `REGION`, `B
 3. **Deploy user:** create an IAM user `github-deploy` with no console access and `deploy/aws/github-deploy-policy.json` as its only (inline) policy. Create an access key for it (use case: *Application running outside AWS*). The key doesn't expire on its own, so rotate it now and then, and delete it if it might have leaked.
 4. **GitHub environment:** Settings → Environments → New `production`.
    - Deployment branches: `main` only. Required reviewers: you.
-   - Secrets `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`: the deploy user's key.
-   - Variables `AWS_REGION`, `DEPLOY_BUCKET`, `EC2_INSTANCE_ID`.
+   - Secrets `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` (the deploy user's key), `AWS_REGION`, `DEPLOY_BUCKET`, `EC2_INSTANCE_ID`. Keeping the last three as secrets also hides them in the public Actions logs.
 5. **Repo settings:** Actions → General → Workflow permissions: *Read repository contents*. Then add the `test` check as required in the `main` ruleset.
 
 ## Everyday use
