@@ -42,19 +42,18 @@ Design: `docs/superpowers/specs/2026-11-01-ai-eng-digest-design.md`
 
 ## Deploy from GitHub
 
-`.github/workflows/ci.yml` runs `go vet` and the tests on every PR. On a merge to `main` it also builds `digest` for linux/arm64, uploads it to S3, and has the instance install it through AWS Systems Manager, so no SSH port or AWS key is involved. Only the binary changes. `config.yaml` and `digest.env` stay as they are on the instance.
+`.github/workflows/ci.yml` runs `go vet` and the tests on every PR. On a merge to `main` it also builds `digest` for linux/arm64, uploads it to S3, and has the instance install it through AWS Systems Manager, so no SSH port is involved. Only the binary changes. `config.yaml` and `digest.env` stay as they are on the instance.
 
 One-time setup, in this order. Fill the placeholders (`ACCOUNT_ID`, `REGION`, `BUCKET`, `INSTANCE_ID`) in `deploy/aws/*.json` as you go, but don't commit your real values.
 
 1. **S3 bucket** for builds: keep *Block all public access* on, and add a lifecycle rule that expires objects under `digest/` after 30 days.
 2. **Instance role:** create an EC2 role with the managed policy `AmazonSSMManagedInstanceCore` plus `deploy/aws/instance-policy.json`, and attach it to the instance (Actions → Security → Modify IAM role). After a minute, `aws ssm describe-instance-information` should list the instance as `Online`.
-3. **GitHub as an identity provider:** IAM → Identity providers → Add → OpenID Connect, URL `https://token.actions.githubusercontent.com`, audience `sts.amazonaws.com`.
-4. **Deploy role:** create a role with `deploy/aws/github-trust-policy.json` as its trust policy and `deploy/aws/github-deploy-policy.json` as its permissions.
-5. **GitHub environment:** Settings → Environments → New `production`.
+3. **Deploy user:** create an IAM user `github-deploy` with no console access and `deploy/aws/github-deploy-policy.json` as its only (inline) policy. Create an access key for it (use case: *Application running outside AWS*). The key doesn't expire on its own, so rotate it now and then, and delete it if it might have leaked.
+4. **GitHub environment:** Settings → Environments → New `production`.
    - Deployment branches: `main` only. Required reviewers: you.
-   - Secret `AWS_ROLE_ARN`: the deploy role's ARN.
+   - Secrets `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`: the deploy user's key.
    - Variables `AWS_REGION`, `DEPLOY_BUCKET`, `EC2_INSTANCE_ID`.
-6. **Repo settings:** Actions → General → Workflow permissions: *Read repository contents*. Then add the `test` check as required in the `main` ruleset.
+5. **Repo settings:** Actions → General → Workflow permissions: *Read repository contents*. Then add the `test` check as required in the `main` ruleset.
 
 ## Everyday use
 
